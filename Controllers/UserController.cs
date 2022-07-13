@@ -20,5 +20,29 @@ namespace TestApi.Controllers
         {
             return Ok(dbContext.Users!.ToList());
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Add(AddUserRequest request)
+        {
+            try
+            {
+                var user = new User()
+                {
+                    id = Guid.NewGuid(),
+                    name = request.name,
+                    email = request.email,
+                    dni = request.dni
+                };
+
+                await dbContext.Users!.AddAsync(user);
+                await dbContext.SaveChangesAsync();
+
+                return Ok(user);
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }

@@ -1,8 +1,7 @@
 namespace TestApi.Models
 {
-    public class User
+    public class AddUserRequest
     {
-        public Guid id { get; set; }
         public string? name { get; set; }
         public string? email { get; set; }
         public int dni { get; set; }
