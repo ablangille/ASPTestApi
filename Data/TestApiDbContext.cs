@@ -12,6 +12,7 @@ namespace TestApi.Data
         public TestApiDbContext(DbContextOptions options) : base(options) { }
 
         // properties to interact with entities
+        // dbSet is sort of like a table
         public DbSet<User>? Users { get; set; }
     }
 }
