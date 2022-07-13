@@ -11,10 +11,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// injecting inMemory database to services
+// user secrets
+// see https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows
+var dbConnectionString = builder.Configuration["Database:ConnectionString"];
+
+// injecting database to services
 // see dependency injection @ https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0
+// Migrations
+// https://www.entityframeworktutorial.net/efcore/entity-framework-core-migration.aspx
 builder.Services.AddDbContext<TestApiDbContext>(
-    options => options.UseInMemoryDatabase("TestApiDB")
+    options => options.UseSqlServer(dbConnectionString)
 );
 
 var app = builder.Build();
