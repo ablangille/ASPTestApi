@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TestApi.Models;
 using TestApi.Data;
+using TestApi.Handlers;
 
 namespace TestApi.Controllers
 {
@@ -55,18 +56,13 @@ namespace TestApi.Controllers
             }
             catch (Exception e)
             {
-                if (
-                    e is DbUpdateException
-                    || e is DbUpdateConcurrencyException
-                    || e is OperationCanceledException
-                )
+                if (e is DbUpdateException dbUpdateEx)
                 {
-                    return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
+                    return StatusCode(result.statusCode, result.message);
                 }
-                else
-                {
-                    throw;
-                }
+
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
             return Ok(user);
@@ -92,18 +88,7 @@ namespace TestApi.Controllers
             }
             catch (Exception e)
             {
-                if (
-                    e is DbUpdateException
-                    || e is DbUpdateConcurrencyException
-                    || e is OperationCanceledException
-                )
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
             return Ok(user);
@@ -127,18 +112,7 @@ namespace TestApi.Controllers
             }
             catch (Exception e)
             {
-                if (
-                    e is DbUpdateException
-                    || e is DbUpdateConcurrencyException
-                    || e is OperationCanceledException
-                )
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
             return Ok(user);
