@@ -88,6 +88,12 @@ namespace TestApi.Controllers
             }
             catch (Exception e)
             {
+                if (e is DbUpdateException dbUpdateEx)
+                {
+                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
+                    return StatusCode(result.statusCode, result.message);
+                }
+
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
@@ -112,6 +118,12 @@ namespace TestApi.Controllers
             }
             catch (Exception e)
             {
+                if (e is DbUpdateException dbUpdateEx)
+                {
+                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
+                    return StatusCode(result.statusCode, result.message);
+                }
+
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
