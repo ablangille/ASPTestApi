@@ -19,9 +19,7 @@ var dbConnectionString = builder.Configuration["Database:ConnectionString"];
 // see dependency injection @ https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0
 // Migrations
 // https://www.entityframeworktutorial.net/efcore/entity-framework-core-migration.aspx
-builder.Services.AddDbContext<TestApiDbContext>(
-    options => options.UseSqlServer(dbConnectionString)
-);
+builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@dbConnectionString));
 
 var app = builder.Build();
 

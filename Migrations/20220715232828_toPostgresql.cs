@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TestApi.Migrations
 {
-    public partial class FirstMigration : Migration
+    public partial class toPostgresql : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,15 +13,21 @@ namespace TestApi.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    dni = table.Column<int>(type: "int", nullable: false)
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "text", nullable: true),
+                    email = table.Column<string>(type: "text", nullable: true),
+                    dni = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_dni",
+                table: "Users",
+                column: "dni",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
