@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using TestApi.Models;
 
 namespace TestApi.Handlers
@@ -8,24 +8,29 @@ namespace TestApi.Handlers
     {
         public static ExceptionHandlerResult HandleDbUpdateException(DbUpdateException ex)
         {
-            if (ex.InnerException is SqlException sqlEx)
+            if (ex.InnerException is NpgsqlException npgsqlEx)
             {
-                switch (sqlEx.Number)
+                if (ex.InnerException is PostgresException postgresEx)
                 {
-                    case 2627: // Unique constraint error
-                    case 547: // Constraint check violation
-                    case 2601: // Duplicated key row error
-                        return new ExceptionHandlerResult()
-                        {
-                            statusCode = StatusCodes.Status409Conflict,
-                            message = sqlEx.Message
-                        };
-                    default:
-                        return new ExceptionHandlerResult()
-                        {
-                            statusCode = StatusCodes.Status500InternalServerError,
-                            message = sqlEx.Message
-                        };
+                    /* DOCS
+                    This exception only corresponds to a PostgreSQL-delivered error.
+                    Other errors (e.g. network issues) will be raised via NpgsqlException,
+                    and purely Npgsql-related issues which aren't related to the server will
+                    be raised via the standard CLR exceptions (e.g. ).
+                    */
+                    return new ExceptionHandlerResult()
+                    {
+                        statusCode = StatusCodes.Status409Conflict,
+                        message = postgresEx.Message
+                    };
+                }
+                else
+                {
+                    return new ExceptionHandlerResult()
+                    {
+                        statusCode = StatusCodes.Status500InternalServerError,
+                        message = npgsqlEx.Message
+                    };
                 }
             }
 
