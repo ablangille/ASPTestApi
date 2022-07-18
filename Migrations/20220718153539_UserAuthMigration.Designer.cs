@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TestApi.Data;
@@ -11,9 +12,10 @@ using TestApi.Data;
 namespace TestApi.Migrations
 {
     [DbContext(typeof(TestApiDbContext))]
-    partial class TestApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220718153539_UserAuthMigration")]
+    partial class UserAuthMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

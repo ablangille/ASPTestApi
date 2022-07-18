@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using BCryptNet = BCrypt.Net.BCrypt;
 using TestApi.Models;
 using TestApi.Interface;
 using TestApi.Handlers;
@@ -31,7 +32,7 @@ namespace TestApi.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound("User not found");
             }
 
             return Ok(user);
@@ -45,7 +46,7 @@ namespace TestApi.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound("User not found");
             }
 
             return Ok(user);
@@ -60,6 +61,7 @@ namespace TestApi.Controllers
                 id = Guid.NewGuid(),
                 name = request.name,
                 email = request.email,
+                password = BCryptNet.HashPassword(request.password),
                 dni = request.dni
             };
 
@@ -90,11 +92,17 @@ namespace TestApi.Controllers
 
             if (user == null)
             {
-                return NotFound();
+                return NotFound("User not found");
             }
 
             user.email = request.email != null ? request.email : user.email;
             user.name = request.name != null ? request.name : user.name;
+
+            // hash and save on new password
+            if (request.password != null && !BCryptNet.Verify(request.password, user.password))
+            {
+                user.password = BCryptNet.HashPassword(request.password);
+            }
 
             try
             {
@@ -129,7 +137,7 @@ namespace TestApi.Controllers
                 }
                 else
                 {
-                    return NotFound();
+                    return NotFound("User not found");
                 }
             }
             catch (Exception e)
