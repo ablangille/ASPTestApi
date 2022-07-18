@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TestApi.Models;
-using TestApi.Data;
+using TestApi.Interface;
 using TestApi.Handlers;
 
 namespace TestApi.Controllers
@@ -10,24 +10,38 @@ namespace TestApi.Controllers
     [Route("api/users")]
     public class UserController : Controller
     {
-        private readonly TestApiDbContext dbContext;
+        private readonly IUsers _IUsers;
 
-        public UserController(TestApiDbContext dbContext)
+        public UserController(IUsers IUsers)
         {
-            this.dbContext = dbContext;
+            _IUsers = IUsers;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<ActionResult<IEnumerable<User>>> Get()
         {
-            return Ok(await dbContext.Users!.ToListAsync());
+            return Ok(await Task.FromResult(_IUsers.GetUsers()));
         }
 
         [HttpGet]
         [Route("{id:guid}")]
-        public async Task<IActionResult> GetOne([FromRoute] Guid id)
+        public async Task<ActionResult<User>> GetOne([FromRoute] Guid id)
         {
-            var user = await dbContext.Users!.FindAsync(id);
+            var user = await Task.FromResult(_IUsers.GetUser(id));
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(user);
+        }
+
+        [HttpGet]
+        [Route("{dni:int}")]
+        public async Task<ActionResult<User>> GetOne([FromRoute] int dni)
+        {
+            var user = await Task.FromResult(_IUsers.GetUser(dni));
 
             if (user == null)
             {
@@ -39,7 +53,7 @@ namespace TestApi.Controllers
 
         [HttpPost]
         [Route("add")]
-        public async Task<IActionResult> Add(AddUserRequest request)
+        public async Task<ActionResult<User>> Add(AddUserRequest request)
         {
             var user = new User()
             {
@@ -51,8 +65,8 @@ namespace TestApi.Controllers
 
             try
             {
-                await dbContext.Users!.AddAsync(user);
-                await dbContext.SaveChangesAsync();
+                _IUsers.AddUser(user);
+                await Task.FromResult(user);
             }
             catch (Exception e)
             {
@@ -70,9 +84,9 @@ namespace TestApi.Controllers
 
         [HttpPut]
         [Route("update/{id:guid}")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, UpdateUserRequest request)
+        public async Task<ActionResult<User>> Update([FromRoute] Guid id, UpdateUserRequest request)
         {
-            var user = await dbContext.Users!.FindAsync(id);
+            var user = await Task.FromResult(_IUsers.GetUser(id));
 
             if (user == null)
             {
@@ -84,7 +98,8 @@ namespace TestApi.Controllers
 
             try
             {
-                await dbContext.SaveChangesAsync();
+                _IUsers.UpdateUser(user);
+                await Task.FromResult(user);
             }
             catch (Exception e)
             {
@@ -102,19 +117,20 @@ namespace TestApi.Controllers
 
         [HttpDelete]
         [Route("delete/{id:guid}")]
-        public async Task<IActionResult> Delete([FromRoute] Guid id)
+        public async Task<ActionResult<User>> Delete([FromRoute] Guid id)
         {
-            var user = await dbContext.Users!.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
             try
             {
-                dbContext.Remove(user);
-                await dbContext.SaveChangesAsync();
+                var user = await Task.FromResult(_IUsers.DeleteUser(id));
+
+                if (user != null)
+                {
+                    return Ok(user);
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch (Exception e)
             {
@@ -126,8 +142,6 @@ namespace TestApi.Controllers
 
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
-
-            return Ok(user);
         }
     }
 }

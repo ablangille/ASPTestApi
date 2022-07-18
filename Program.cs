@@ -1,4 +1,6 @@
 using TestApi.Data;
+using TestApi.Interface;
+using TestApi.Repository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +22,9 @@ var dbConnectionString = builder.Configuration["Database:ConnectionString"];
 // Migrations
 // https://www.entityframeworktutorial.net/efcore/entity-framework-core-migration.aspx
 builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@dbConnectionString));
+
+// link and add repository & interface to services
+builder.Services.AddTransient<IUsers, UserRepository>();
 
 var app = builder.Build();
 
