@@ -14,12 +14,10 @@ namespace TestApi.Controllers
     public class AuthController : Controller
     {
         private readonly IUserService _userService;
-        public IConfiguration Configuration;
 
-        public AuthController(IUserService userService, IConfiguration configuration)
+        public AuthController(IUserService userService)
         {
             _userService = userService;
-            Configuration = configuration;
         }
 
         [HttpPost]
@@ -40,7 +38,10 @@ namespace TestApi.Controllers
             //create claims details based on the user information
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, Configuration["JWT:Subject"]),
+                new Claim(
+                    JwtRegisteredClaimNames.Sub,
+                    Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT")!
+                ),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
                 new Claim("Id", user.Id.ToString()),
@@ -48,11 +49,13 @@ namespace TestApi.Controllers
                 new Claim("Dni", user.Dni.ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Key"]));
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("TestApi_JWT_KEY")!)
+            );
             var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                Configuration["JWT:Issuer"],
-                Configuration["JWT:Audience"],
+                Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER")!,
+                Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE")!,
                 claims,
                 expires: DateTime.UtcNow.AddMinutes(10),
                 signingCredentials: signIn
