@@ -59,19 +59,24 @@ builder.Services.AddSwaggerGen(swagger =>
     );
 });
 
-// user secrets
-// see https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows
-var dbConnectionString = builder.Configuration["Database:ConnectionString"];
+//user secrets
+//https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows
+var dbConnectionString = Environment.GetEnvironmentVariable("TestApi_ConnectionString");
 
 // injecting database to services
 // Dependency injection
 // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-6.0
 // Migrations
 // https://www.entityframeworktutorial.net/efcore/entity-framework-core-migration.aspx
-builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@dbConnectionString));
+builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@dbConnectionString!));
 
 // link and add repository & interface to services
 builder.Services.AddTransient<IUserService, UserRepository>();
+
+var jwtIssuer = Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER");
+var jwtAudience = Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE");
+var jwtSubject = Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT");
+var jwtKey = Environment.GetEnvironmentVariable("TestApi_JWT_KEY");
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -83,11 +88,9 @@ builder.Services
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["JWT:Audience"],
-            ValidIssuer = builder.Configuration["JWT:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"])
-            )
+            ValidAudience = jwtAudience,
+            ValidIssuer = jwtIssuer,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
         };
     });
 
@@ -98,6 +101,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    //env variables
+    Console.WriteLine(dbConnectionString);
+    Console.WriteLine(jwtIssuer);
+    Console.WriteLine(jwtAudience);
+    Console.WriteLine(jwtSubject);
+    Console.WriteLine(jwtKey);
 }
 
 app.UseAuthentication();
