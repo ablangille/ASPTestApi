@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using BCryptNet = BCrypt.Net.BCrypt;
 using TestApi.Models;
@@ -7,6 +8,7 @@ using TestApi.Handlers;
 
 namespace TestApi.Controllers
 {
+    [Authorize] // this routes need an access token
     [ApiController]
     [Route("api/users")]
     public class UserController : Controller
