@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using BCryptNet = BCrypt.Net.BCrypt;
 using TestApi.Models;
-using TestApi.Interface;
+using TestApi.Services;
 using TestApi.Handlers;
 
 namespace TestApi.Controllers
@@ -13,24 +13,24 @@ namespace TestApi.Controllers
     [Route("api/users")]
     public class UserController : Controller
     {
-        private readonly IUsers _IUsers;
+        private readonly IUserService _userService;
 
-        public UserController(IUsers IUsers)
+        public UserController(IUserService userService)
         {
-            _IUsers = IUsers;
+            _userService = userService;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> Get()
         {
-            return Ok(await Task.FromResult(_IUsers.GetUsers()));
+            return Ok(await Task.FromResult(_userService.GetUsers()));
         }
 
         [HttpGet]
         [Route("{id:guid}")]
         public async Task<ActionResult<User>> GetOne([FromRoute] Guid id)
         {
-            var user = await Task.FromResult(_IUsers.GetUser(id));
+            var user = await Task.FromResult(_userService.GetUser(id));
 
             if (user == null)
             {
@@ -44,7 +44,7 @@ namespace TestApi.Controllers
         [Route("{dni:int}")]
         public async Task<ActionResult<User>> GetOne([FromRoute] int dni)
         {
-            var user = await Task.FromResult(_IUsers.GetUser(dni));
+            var user = await Task.FromResult(_userService.GetUser(dni));
 
             if (user == null)
             {
@@ -60,16 +60,16 @@ namespace TestApi.Controllers
         {
             var user = new User()
             {
-                id = Guid.NewGuid(),
-                name = request.name,
-                email = request.email,
-                password = BCryptNet.HashPassword(request.password),
-                dni = request.dni
+                Id = Guid.NewGuid(),
+                Name = request.Name,
+                Email = request.Email,
+                Password = BCryptNet.HashPassword(request.Password),
+                Dni = request.Dni
             };
 
             try
             {
-                _IUsers.AddUser(user);
+                _userService.AddUser(user);
                 await Task.FromResult(user);
             }
             catch (Exception e)
@@ -90,25 +90,25 @@ namespace TestApi.Controllers
         [Route("update/{id:guid}")]
         public async Task<ActionResult<User>> Update([FromRoute] Guid id, UpdateUserRequest request)
         {
-            var user = await Task.FromResult(_IUsers.GetUser(id));
+            var user = await Task.FromResult(_userService.GetUser(id));
 
             if (user == null)
             {
                 return NotFound("User not found");
             }
 
-            user.email = request.email != null ? request.email : user.email;
-            user.name = request.name != null ? request.name : user.name;
+            user.Email = request.Email != null ? request.Email : user.Email;
+            user.Name = request.Name != null ? request.Name : user.Name;
 
             // hash and save on new password
-            if (request.password != null && !BCryptNet.Verify(request.password, user.password))
+            if (request.Password != null && !BCryptNet.Verify(request.Password, user.Password))
             {
-                user.password = BCryptNet.HashPassword(request.password);
+                user.Password = BCryptNet.HashPassword(request.Password);
             }
 
             try
             {
-                _IUsers.UpdateUser(user);
+                _userService.UpdateUser(user);
                 await Task.FromResult(user);
             }
             catch (Exception e)
@@ -131,7 +131,7 @@ namespace TestApi.Controllers
         {
             try
             {
-                var user = await Task.FromResult(_IUsers.DeleteUser(id));
+                var user = await Task.FromResult(_userService.DeleteUser(id));
 
                 if (user != null)
                 {

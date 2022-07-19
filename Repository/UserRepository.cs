@@ -1,11 +1,11 @@
 using TestApi.Models;
-using TestApi.Interface;
+using TestApi.Services;
 using TestApi.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace TestApi.Repository
 {
-    public class UserRepository : IUsers
+    public class UserRepository : IUserService
     {
         private readonly TestApiDbContext _dbContext;
 
@@ -42,7 +42,7 @@ namespace TestApi.Repository
         {
             try
             {
-                return _dbContext.Users!.SingleOrDefault(user => user.dni == dni);
+                return _dbContext.Users!.SingleOrDefault(user => user.Dni == dni);
             }
             catch
             {

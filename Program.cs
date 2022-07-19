@@ -1,5 +1,5 @@
 using TestApi.Data;
-using TestApi.Interface;
+using TestApi.Services;
 using TestApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -71,7 +71,7 @@ var dbConnectionString = builder.Configuration["Database:ConnectionString"];
 builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@dbConnectionString));
 
 // link and add repository & interface to services
-builder.Services.AddTransient<IUsers, UserRepository>();
+builder.Services.AddTransient<IUserService, UserRepository>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

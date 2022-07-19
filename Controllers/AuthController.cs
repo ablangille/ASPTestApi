@@ -5,7 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using TestApi.Models;
-using TestApi.Interface;
+using TestApi.Services;
 
 namespace TestApi.Controllers
 {
@@ -13,26 +13,26 @@ namespace TestApi.Controllers
     [Route("api/auth")]
     public class AuthController : Controller
     {
-        private readonly IUsers _IUsers;
-        public IConfiguration _configuration;
+        private readonly IUserService _userService;
+        public IConfiguration Configuration;
 
-        public AuthController(IUsers IUsers, IConfiguration config)
+        public AuthController(IUserService userService, IConfiguration configuration)
         {
-            _IUsers = IUsers;
-            _configuration = config;
+            _userService = userService;
+            Configuration = configuration;
         }
 
         [HttpPost]
         public async Task<IActionResult> Authenticate(AuthRequest request)
         {
-            var user = await Task.FromResult(_IUsers.GetUser(request.dni));
+            var user = await Task.FromResult(_userService.GetUser(request.Dni));
 
             if (user == null)
             {
                 return NotFound("User not found");
             }
 
-            if (!BCryptNet.Verify(request.password, user.password))
+            if (!BCryptNet.Verify(request.Password, user.Password))
             {
                 return BadRequest("Incorrect password");
             }
@@ -40,19 +40,19 @@ namespace TestApi.Controllers
             //create claims details based on the user information
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, _configuration["JWT:Subject"]),
+                new Claim(JwtRegisteredClaimNames.Sub, Configuration["JWT:Subject"]),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                new Claim("id", user.id.ToString()),
-                new Claim("email", user.email!),
-                new Claim("dni", user.dni.ToString())
+                new Claim("Id", user.Id.ToString()),
+                new Claim("Email", user.Email!),
+                new Claim("Dni", user.Dni.ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Key"]));
             var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
-                _configuration["JWT:Issuer"],
-                _configuration["JWT:Audience"],
+                Configuration["JWT:Issuer"],
+                Configuration["JWT:Audience"],
                 claims,
                 expires: DateTime.UtcNow.AddMinutes(10),
                 signingCredentials: signIn

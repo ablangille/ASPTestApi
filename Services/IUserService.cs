@@ -1,8 +1,8 @@
 using TestApi.Models;
 
-namespace TestApi.Interface
+namespace TestApi.Services
 {
-    public interface IUsers
+    public interface IUserService
     {
         public List<User> GetUsers();
         public User? GetUser(Guid id);
