@@ -59,9 +59,12 @@ builder.Services.AddSwaggerGen(swagger =>
     );
 });
 
-//user secrets
-//https://docs.microsoft.com/en-us/aspnet/core/security/app-secrets?view=aspnetcore-6.0&tabs=windows
+// ENV Variables
 var dbConnectionString = Environment.GetEnvironmentVariable("TestApi_ConnectionString");
+var jwtIssuer = Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER");
+var jwtAudience = Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE");
+var jwtSubject = Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT");
+var jwtKey = Environment.GetEnvironmentVariable("TestApi_JWT_KEY");
 
 // injecting database to services
 // Dependency injection
@@ -72,11 +75,6 @@ builder.Services.AddDbContext<TestApiDbContext>(options => options.UseNpgsql(@db
 
 // link and add repository & interface to services
 builder.Services.AddTransient<IUserService, UserRepository>();
-
-var jwtIssuer = Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER");
-var jwtAudience = Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE");
-var jwtSubject = Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT");
-var jwtKey = Environment.GetEnvironmentVariable("TestApi_JWT_KEY");
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -96,20 +94,20 @@ builder.Services
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Development nice-to-haves
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    //env variables
-    Console.WriteLine(dbConnectionString);
-    Console.WriteLine(jwtIssuer);
-    Console.WriteLine(jwtAudience);
-    Console.WriteLine(jwtSubject);
-    Console.WriteLine(jwtKey);
+    Console.WriteLine("DB Connection: " + dbConnectionString);
+    Console.WriteLine("JWT Issuer: " + jwtIssuer);
+    Console.WriteLine("JWT Audience: " + jwtAudience);
+    Console.WriteLine("JWT Subject: " + jwtSubject);
+    Console.WriteLine("JWT Key: " + jwtKey);
 }
 
+// Configure the HTTP request pipeline.
 app.UseAuthentication();
 
 app.UseHttpsRedirection();
