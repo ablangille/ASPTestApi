@@ -1,10 +1,10 @@
 # Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP .NET Core service.
 
-version: '3.4'
+version: "3.4"
 
 services:
-  netcore:
-    image: netcore
+  aspnetcoreapi:
+    image: arbp97/aspnetcoreapi
     environment:
       - TestApi_ConnectionString=${TestApi_ConnectionString}
       - TestApi_JWT_KEY=${TestApi_JWT_KEY}
