@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using BCryptNet = BCrypt.Net.BCrypt;
 using TestApi.Models;
 using TestApi.Services;
-using TestApi.Handlers;
 
 namespace TestApi.Controllers
 {
@@ -23,35 +22,58 @@ namespace TestApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> Get()
         {
-            return Ok(await Task.FromResult(_userService.GetUsers()));
+            try
+            {
+                var users = await Task.FromResult(_userService.GetUsers());
+
+                return Ok(users);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+            }
         }
 
         [HttpGet]
         [Route("{id:guid}")]
         public async Task<ActionResult<User>> GetOne([FromRoute] Guid id)
         {
-            var user = await Task.FromResult(_userService.GetUser(id));
-
-            if (user == null)
+            try
             {
-                return NotFound("User not found");
-            }
+                var user = await Task.FromResult(_userService.GetUser(id));
 
-            return Ok(user);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                return Ok(user);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+            }
         }
 
         [HttpGet]
         [Route("{dni:int}")]
         public async Task<ActionResult<User>> GetOne([FromRoute] int dni)
         {
-            var user = await Task.FromResult(_userService.GetUser(dni));
-
-            if (user == null)
+            try
             {
-                return NotFound("User not found");
-            }
+                var user = await Task.FromResult(_userService.GetUser(dni));
 
-            return Ok(user);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                return Ok(user);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+            }
         }
 
         [HttpPost]
@@ -72,15 +94,13 @@ namespace TestApi.Controllers
                 _userService.AddUser(user);
                 await Task.FromResult(user);
             }
-            catch (Exception e)
+            catch (DbUpdateException ex)
             {
-                if (e is DbUpdateException dbUpdateEx)
-                {
-                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
-                    return StatusCode(result.statusCode, result.message);
-                }
-
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return StatusCode(StatusCodes.Status409Conflict, ex.InnerException?.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
             }
 
             return Ok(user);
@@ -111,15 +131,9 @@ namespace TestApi.Controllers
                 _userService.UpdateUser(user);
                 await Task.FromResult(user);
             }
-            catch (Exception e)
+            catch (InvalidOperationException ex)
             {
-                if (e is DbUpdateException dbUpdateEx)
-                {
-                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
-                    return StatusCode(result.statusCode, result.message);
-                }
-
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
             }
 
             return Ok(user);
@@ -142,15 +156,9 @@ namespace TestApi.Controllers
                     return NotFound("User not found");
                 }
             }
-            catch (Exception e)
+            catch (InvalidOperationException ex)
             {
-                if (e is DbUpdateException dbUpdateEx)
-                {
-                    var result = DbUpdateExceptionHandler.HandleDbUpdateException(dbUpdateEx);
-                    return StatusCode(result.statusCode, result.message);
-                }
-
-                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
             }
         }
     }

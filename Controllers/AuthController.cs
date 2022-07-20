@@ -23,51 +23,61 @@ namespace TestApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Authenticate(AuthRequest request)
         {
-            var user = await Task.FromResult(_userService.GetUser(request.Dni));
-
-            if (user == null)
+            try
             {
-                return NotFound("User not found");
-            }
+                var user = await Task.FromResult(_userService.GetUser(request.Dni));
 
-            if (!BCryptNet.Verify(request.Password, user.Password))
-            {
-                return BadRequest("Incorrect password");
-            }
-
-            //create claims details based on the user information
-            var claims = new[]
-            {
-                new Claim(
-                    JwtRegisteredClaimNames.Sub,
-                    Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT")!
-                ),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-                new Claim("Id", user.Id.ToString()),
-                new Claim("Email", user.Email!),
-                new Claim("Dni", user.Dni.ToString())
-            };
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("TestApi_JWT_KEY")!)
-            );
-            var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER")!,
-                Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE")!,
-                claims,
-                expires: DateTime.UtcNow.AddMinutes(10),
-                signingCredentials: signIn
-            );
-
-            return Ok(
-                new
+                if (user == null)
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    return NotFound("User not found");
                 }
-            );
+
+                if (!BCryptNet.Verify(request.Password, user.Password))
+                {
+                    return BadRequest("Incorrect password");
+                }
+
+                //create claims details based on the user information
+                var claims = new[]
+                {
+                    new Claim(
+                        JwtRegisteredClaimNames.Sub,
+                        Environment.GetEnvironmentVariable("TestApi_JWT_SUBJECT")!
+                    ),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
+                    new Claim("Id", user.Id.ToString()),
+                    new Claim("Email", user.Email!),
+                    new Claim("Dni", user.Dni.ToString())
+                };
+
+                var key = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("TestApi_JWT_KEY")!)
+                );
+                var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var token = new JwtSecurityToken(
+                    Environment.GetEnvironmentVariable("TestApi_JWT_ISSUER")!,
+                    Environment.GetEnvironmentVariable("TestApi_JWT_AUDIENCE")!,
+                    claims,
+                    expires: DateTime.UtcNow.AddMinutes(10),
+                    signingCredentials: signIn
+                );
+
+                return Ok(
+                    new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo
+                    }
+                );
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ex.Message);
+            }
+            catch(ArgumentException ex) {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
     }
 }
